@@ -1,0 +1,118 @@
+---
+centrifugo:
+  version: 3.2.2
+  # control via pillar will Centrifugo be installed or not
+  install: true
+  # Installation method selection
+  # package, repo - configure official repository (available for Debian and RedHat like systems), then install package
+  # binary, archive - download and install precompiled binary from official server or from salt fileserver
+  use_upstream: binary
+  user: centrifugo
+  group: centrifugo
+  home: /var/lib/centrifugo
+  root_user: root
+  root_group: root
+  bin: /usr/bin/centrifugo
+  service:
+    name: centrifugo
+    # running / dead
+    status: running
+    # enabled / disabled
+    on_boot_state: enabled
+    # When triggering service after configuration changes use reload instead of restart
+    reload: false
+    systemd:
+      # directory where systemd service unit file will be saved
+      unit_dir: /etc/systemd/system
+  binary:
+    # List of packages required for binary installation, i.e. gzip
+    # is required to extract archive with centrifugo binary
+    # NOTE: those packages won't be removed with centrifugo.binary.clean state
+    prereq_pkgs:
+      - tar
+      - gzip
+    # Formula will try download distributive from list of sources:
+    # - %download_local%/%version%/centrifugo_%version%_linux_amd64.tar.gz
+    # - %download_remote%/%version%/centrifugo_%version%_linux_amd64.tar.gz
+    # If you put archive with centrifugo on salt-fileserver i.e.
+    # /filserver_root/centrifugo/files/3.2.2/centrifugo_3.2.2._linux_amd64.tar.gz
+    # it will be used first, if distributive file is not present on salt-filserver
+    # %download_remote% will be used as a fallback
+    download_local: salt://centrifugo/files
+    source_hash_local: salt://centrifugo/files
+    download_remote: https://github.com/centrifugal/centrifugo/releases/download/
+    # File with SHA sums will be downloaded from  %source_hash_remote%/%version%/centrifugo_%version%_checksums.txt
+    # It will only be used if `skip_verify: false` and when distributive is downloaded via http[s]
+    source_hash_remote: https://github.com/centrifugal/centrifugo/releases/download/
+    # Skip checksum verification, by default checksum will be verified
+    skip_verify: false
+    # Temp dir for manipulations with archive
+    temp_dir: /tmp/centrifugo
+  package:
+    # List of packages required for packages installation, i.e. python3-dnf-plugin-versionlock
+    # is required on RedHat family to hold packages
+    # NOTE: those packages won't be removed with centrifugo.package.clean state
+    prereq_pkgs: []
+    # List of some extra packages to install
+    # NOTE: those packages won't be removed with centrifugo.package.clean state
+    pkgs_extra: []
+    pkgs:
+      - centrifugo
+    hold: false
+    update_holds: true
+    install_recommends: true
+  repo:
+    # Check osafamilymap.yaml for more examples
+    # List of packages to install before configuring repository
+    # i.e. for Debian family
+    prerequisites:
+      - apt-transport-https
+      - ca-certificates
+      - debian-archive-keyring
+    # Keyring file, need to be prepared with command like
+    # curl -fsSL https://packagecloud.io/FZambia/centrifugo/gpgkey \
+    #   | gpg --dearmor > /etc/apt/trusted.gpg.d/FZambia_centrifugo.gpg
+    # see https://packagecloud.io/FZambia/centrifugo/install#manual-deb
+    keyring: salt://centrifugo/files/FZambia_centrifugo-archive-keyring.gpg
+    # Repository configuration will be used as pkgrepo.managed parameters
+    config:
+      # i.e. for Debian family
+      name: >
+        deb [signed-by=/usr/share/keyrings/centrifugo-archive-keyring.gpg]
+        https://packagecloud.io/FZambia/centrifugo/debian {{ grains.oscodename|lower}} main
+      file: /etc/apt/sources.list.d/centrifugo.list
+      # don't use key_url, keyring is used instead
+      # key_url: https://packagecloud.io/FZambia/centrifugo/gpgkey
+      clean_file: true
+  # Environment options
+  env:
+    file: /etc/default/centrifugo
+    # All Centrifugo options can be set over env in the format CENTRIFUGO_<OPTION_NAME>
+    # (i.e. option name with CENTRIFUGO_ prefix, all in uppercase).
+    options:
+      # Enable Prometheus metrics
+      CENTRIFUGO_PROMETHEUS: 1
+      # Enable /health endpoint
+      CENTRIFUGO_HEALTH: true
+      # Configure namespaces
+      # as string (must be valid JSON)
+      CENTRIFUGO_NAMESPACES: '[{"name": "ns1"}, {"name": "ns2"}]'
+      # as YAML - will be rendered as JSON
+      # CENTRIFUGO_NAMESPACES:
+      #   - name: ns1
+      #   - name: ns2
+      # Extra command line startup otions for centrifugo service
+      CENTRIFUGO_OPTS: --health --admin
+  config:
+    # Configuration file will be serialized with `serializer` using dataset from `data`
+    file: /etc/centrifugo/config.json
+    serializer: json
+    # Don't show diff when updating config file - don't reveal tokens.
+    show_changes: false
+    data:
+      # Minimum mandatory configration parameters - various secrets
+      # They are not neccessary must be in UUID format
+      token_hmac_secret_key: 46b38493-147e-4e3f-86e0-dc5ec54f5133
+      admin_password: ad0dff75-3131-4a02-8d64-9279b4f1c57b
+      admin_secret: 583bc4b7-0fa5-4c4a-8566-16d3ce4ad401
+      api_key: aaaf202f-b5f8-4b34-bf88-f6c03a1ecda6

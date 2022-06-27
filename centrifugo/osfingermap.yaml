@@ -1,0 +1,21 @@
+# If you do not need to provide defaults via the `os_finger` grain,
+# you will need to provide at least an empty dict in this file, e.g.
+# osfingermap: {}
+---
+# os: Debian
+Debian-11: {}
+
+Debian-10: {}
+
+Debian-9:
+  service:
+    systemd:
+      unit_dir: /lib/systemd/system
+
+# os: CentOS
+CentOS Linux-8: {}
+
+CentOS Linux-7:
+  package:
+    prereq_pkgs:
+      - yum-plugin-versionlock

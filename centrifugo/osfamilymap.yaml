@@ -1,0 +1,53 @@
+# If you do not need to provide defaults via the `os_family` grain,
+# you will need to provide at least an empty dict in this file, e.g.
+# osfamilymap: {}
+---
+Debian:
+  env:
+    file: /etc/default/centrifugo
+  repo:
+    prerequisites: []
+    keyring: salt://centrifugo/files/FZambia_centrifugo-archive-keyring.gpg
+    config:
+      - name: >
+          deb [signed-by=/usr/share/keyrings/centrifugo-archive-keyring.gpg]
+          https://packagecloud.io/FZambia/centrifugo/debian {{ grains.oscodename|lower}} main
+        file: /etc/apt/sources.list.d/centrifugo.list
+        # key_url: https://packagecloud.io/FZambia/centrifugo/gpgkey
+        clean_file: true
+      - name: >
+          deb-src [signed-by=/usr/share/keyrings/centrifugo-archive-keyring.gpg]
+          https://packagecloud.io/FZambia/centrifugo/debian {{ grains.oscodename|lower}} main
+        file: /etc/apt/sources.list.d/centrifugo-src.list
+        # key_url: https://packagecloud.io/FZambia/centrifugo/gpgkey
+        clean_file: true
+
+RedHat:
+  env:
+    file: /etc/sysconfig/centrifugo
+  package:
+    prereq_pkgs:
+      - python3-dnf-plugin-versionlock
+  repo:
+    prerequisites: []
+    keyring: ''
+    # RedHat repo configuration is not tested yet
+    config:
+      - name: FZambia_centrifugo
+        baseurl: https://packagecloud.io/FZambia/centrifugo/el/{{ grains['osmajorrelease'] }}/$basearch
+        repo_gpgcheck: 1
+        gpgcheck: 0
+        enabled: 1
+        gpgkey: https://packagecloud.io/FZambia/centrifugo/gpgkey
+        sslverify: 1
+        sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+        metadata_expire: 300
+      - name: FZambia_centrifugo-source
+        baseurl: https://packagecloud.io/FZambia/centrifugo/el/{{ grains['osmajorrelease'] }}/SRPMS
+        repo_gpgcheck: 1
+        gpgcheck: 0
+        enabled: 1
+        gpgkey: https://packagecloud.io/FZambia/centrifugo/gpgkey
+        sslverify: 1
+        sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+        metadata_expire: 300

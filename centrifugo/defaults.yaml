@@ -1,0 +1,62 @@
+---
+centrifugo:
+  version: 3.2.2
+  install: true
+  use_upstream: binary # package, repo / binary, archive
+  user: centrifugo
+  group: centrifugo
+  home: /var/lib/centrifugo
+  root_user: root
+  root_group: root
+  bin: /usr/bin/centrifugo
+  service:
+    name: centrifugo
+    status: running
+    on_boot_state: enabled
+    reload: false
+    systemd:
+      unit_dir: /etc/systemd/system
+  binary:
+    prereq_pkgs:
+      - tar
+      - gzip
+    download_local: salt://centrifugo/files
+    source_hash_local: salt://centrifugo/files
+    download_remote: https://github.com/centrifugal/centrifugo/releases/download/
+    source_hash_remote: https://github.com/centrifugal/centrifugo/releases/download/
+    skip_verify: false
+    temp_dir: /tmp/centrifugo
+  package:
+    prereq_pkgs: []
+    pkgs_extra: []
+    pkgs:
+      - centrifugo
+    hold: false
+    update_holds: true
+    install_recommends: true
+  repo:
+    # Check osafamilymap.yaml for more examples
+    # List of packages to install before configuring zabbix repository
+    # i.e. for Debian family
+    prerequisites:
+      - apt-transport-https
+      - ca-certificates
+      - debian-archive-keyring
+    # Repository configurationm will be used as pkgrepo.managed parameters
+    config:
+      # i.e. for Debian family
+      keyring: salt://centrifugo/files/FZambia_centrifugo-archive-keyring.gpg
+      name: >
+        deb [signed-by=/usr/share/keyrings/centrifugo-archive-keyring.gpg]
+        https://packagecloud.io/FZambia/centrifugo/debian {{ grains.oscodename|lower}} main
+      file: /etc/apt/sources.list.d/centrifugo.list
+      # key_url: https://packagecloud.io/FZambia/centrifugo/gpgkey
+      clean_file: true
+  env:
+    file: /etc/default/centrifugo
+    options: {}
+  config:
+    file: /etc/centrifugo/config.json
+    serializer: json
+    show_changes: false
+    data: {}

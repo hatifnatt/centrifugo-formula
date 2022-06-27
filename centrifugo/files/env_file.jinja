@@ -1,0 +1,13 @@
+{% for k, v in options|dictsort -%}
+  {#- If value is bool - render as is (but convert boolean to lovercase string) -#}
+  {#- Using 'sameas' comparison to check boolean because 'boolean' test added only in Jinja v2.11 -#}
+  {%- if v is sameas true or v is sameas false -%}
+{{ k }}='{{ v|string|lower }}'
+  {#- If value is num or string - render as is -#}
+  {%- elif v is number or v is string -%}
+{{ k }}='{{ v|string }}'
+  {#- If value is list - dump it as JSON -#}
+  {%- elif v is iterable -%}
+{{ k }}='{{ v|tojson }}'
+  {%- endif %}
+{% endfor -%}
